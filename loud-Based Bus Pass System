@@ -1,0 +1,167 @@
+Cloud-Based Bus Pass System 
+● Develop an online ticket booking system hosted on the cloud. 
+● Ensure prevention of ticket loss, theft and incorrect pricing. 
+● Design the system to handle high traffic by dynamically provisioning servers. 
+● Focus on scalability and reliability improvements over traditional booking sites. 
+● Test and deploy the system to provide seamless booking experience for users.  give the program to  do the project i want add in github
+
+
+
+{
+  "name": "bus-pass-system",
+  "version": "1.0.0",
+  "description": "Cloud Based Bus Pass System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "jsonwebtoken": "^9.0.0"
+  }
+}
+
+
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static("public"));
+
+mongoose.connect("mongodb://127.0.0.1:27017/buspass", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log("DB Connected"));
+
+app.use("/auth", require("./routes/auth"));
+app.use("/booking", require("./routes/booking"));
+
+app.listen(5000, () => console.log("Server running on port 5000"));
+
+
+const mongoose = require("mongoose");
+
+const BookingSchema = new mongoose.Schema({
+    userId: String,
+    route: String,
+    price: Number,
+    date: String
+});
+
+module.exports = mongoose.model("Booking", BookingSchema);
+
+
+
+
+const router = require("express").Router();
+const Booking = require("../models/Booking");
+
+router.post("/create", async (req, res) => {
+    const booking = new Booking(req.body);
+    await booking.save();
+    res.send("Ticket Booked");
+});
+
+router.get("/:userId", async (req, res) => {
+    const bookings = await Booking.find({ userId: req.params.userId });
+    res.json(bookings);
+});
+
+module.exports = router;
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bus Pass Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h2>Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="login()">Login</button>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+</head>
+<body>
+
+<h2>Book Ticket</h2>
+
+<select id="route">
+<option>Route A</option>
+<option>Route B</option>
+</select>
+
+<button onclick="book()">Book</button>
+
+<h3>Your Bookings</h3>
+<ul id="list"></ul>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+
+
+let userId = "";
+
+function login() {
+    fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        userId = data._id;
+        window.location = "dashboard.html";
+    });
+}
+
+function book() {
+    fetch("http://localhost:5000/booking/create", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            userId,
+            route: document.getElementById("route").value,
+            price: 50,
+            date: new Date()
+        })
+    }).then(() => alert("Booked"));
+}
+
+
+
+body {
+    font-family: Arial;
+    text-align: center;
+}
+input, button {
+    margin: 10px;
+    padding: 10px;
+}
+
+
+
